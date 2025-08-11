@@ -31,6 +31,14 @@ ServerNews 是一个为 Minecraft 服务器设计的新闻公告系统插件，�
 | `/newsadmin list` | 列出所有新闻 | `/newsadmin list` | `servernews.admin` |
 | `/newsadmin stats` | 显示新闻统计 | `/newsadmin stats` | `servernews.admin` |
 
+## 权限列表
+
+| 权限节点            | 描述                     | 默认值 |
+|---------------------|--------------------------|--------|
+| `servernews.use`    | 允许使用`/news`命令      | true   |
+| `servernews.admin`  | 允许使用新闻管理命令     | op     |
+| `servernews.*`      | 包含所有新闻相关权限    | op     |
+
 ## 配置文件
 
 ### config.yml
@@ -56,18 +64,20 @@ news:
     hover: "悬停提示文本" # 可选
 ```
 
-权限节点  
-权限节点	描述	默认  
-servernews.use	允许使用/news命令	true  
-servernews.admin	允许使用新闻管理命令	op  
-servernews.*	所有权限	op  
+## 常见问题解答
 
-常见问题  
-Q: 如何添加带颜色的新闻？  
-A: 使用 & 符号加上颜色代码，例如 &a绿色文字，或十六进制颜色 #FF0000红色文字。  
+### Q: 如何添加带颜色的新闻？
+**A:**  
+使用 `&` 符号加上颜色代码，例如：
+- `&a` 绿色文字
+- `&#FF0000` 红色文字（十六进制颜色代码）
 
-Q: 为什么新闻书籍打不开？  
-A: 确保玩家有 servernews.use 权限，并检查控制台是否有错误日志。  
+### Q: 为什么新闻书籍打不开？
+**A:**  
+请检查：
+1. 玩家是否拥有 `servernews.use` 权限
+2. 服务器控制台是否有相关错误日志
 
-Q: 如何增加新闻数量限制？  
-A: 修改 config.yml 中的 max-news 值。  
+### Q: 如何增加新闻数量限制？
+**A:**  
+修改配置文件 `config.yml` 中的 `max-news` 参数值
