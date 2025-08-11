@@ -4,6 +4,7 @@
 
 ## Plugin Introduction
 A news announcement system plugin designed for Minecraft servers, which allows administrators to publish and manage server news, displaying it to players in beautifully formatted book form. The plugin supports multiple languages (automatically switching based on client language settings), interactive content, and automatic notification features.  
+
 Compatible with Folia, Paper, Bukkit, Purpur, Spigot, and other server cores.  
 
 ## Features
