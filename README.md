@@ -1,12 +1,12 @@
 # ServerNews 插件文档
 
 ## 插件介绍
-ServerNews 是一个为 Minecraft 服务器设计的新闻公告系统插件，它允许管理员发布和管理服务器新闻，并以精美的书籍形式展示给玩家。插件支持多语言（根据客户端文字自动切换）、交互式内容和自动通知功能。
+ServerNews 是一个为 Minecraft 服务器设计的新闻公告系统插件，它允许管理员发布和管理服务器新闻，并以精美的书籍形式展示给玩家。插件支持多语言（根据客户端文字自动切换）、交互式内容和自动通知功能
 
 ## 功能特性
 - 📖 以书籍形式展示新闻内容
 - 🔔 玩家登录时自动通知未读新闻
-- 🌍 插件默认支持中文和英文，可以在 `messages.yml` 中添加更多语言支持。
+- 🌍 插件默认支持中文和英文，可以在 `messages.yml` 中添加更多语言支持
 - 🔗 支持URL链接和命令交互
 - 📊 新闻统计功能
 - 📅 自动清理过期阅读记录
@@ -30,6 +30,8 @@ ServerNews 是一个为 Minecraft 服务器设计的新闻公告系统插件，�
 | `/newsadmin remove <序号>` | 删除新闻 | `/newsadmin remove 0` | `servernews.admin` |
 | `/newsadmin list` | 列出所有新闻 | `/newsadmin list` | `servernews.admin` |
 | `/newsadmin stats` | 显示新闻统计 | `/newsadmin stats` | `servernews.admin` |
+
+> **建议**：直接在`news.yml`编辑新闻，完成后reload即可
 
 ### 权限列表
 
