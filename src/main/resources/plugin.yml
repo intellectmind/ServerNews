@@ -1,0 +1,38 @@
+name: servernews
+version: '1.0.0'
+main: cn.kurt6.servernews.ServerNews
+api-version: 1.16
+authors: [ Kurt ]
+folia-supported: true
+
+softdepend:
+  - PlaceholderAPI
+
+commands:
+  news:
+    description: Open the server news book
+    usage: /news
+    permission: servernews.use
+    permission-message: "You don't have permission to use this command!"
+
+  newsadmin:
+    description: Admin commands for server news
+    usage: /newsadmin <reload|add>
+    permission: servernews.admin
+    permission-message: "You don't have permission to use this command!"
+
+permissions:
+  servernews.use:
+    description: Allows players to view server news
+    default: true
+
+  servernews.admin:
+    description: Allows players to manage server news
+    default: op
+
+  servernews.*:
+    description: Gives access to all ServerNews permissions
+    default: op
+    children:
+      servernews.use: true
+      servernews.admin: true

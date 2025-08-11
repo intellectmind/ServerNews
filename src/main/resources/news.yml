@@ -1,0 +1,174 @@
+news:
+  - title: "服务器重大更新 | Server Major Update"
+    content: |
+      &6&l📢 服务器重大更新公告
+      
+      &a亲爱的玩家们，
+      
+      &7我们的服务器已成功升级到 &bMinecraft 1.21.8&7！
+      
+      &e🎉 新功能包括：
+      &7• 全新的生物群系
+      &7• 更多的方块类型
+      &7• 优化的游戏性能
+      
+      &c⚠ 重要提醒：
+      &7请使用最新版本的客户端连接服务器。
+      
+      &d💎 特别活动：
+      &7升级庆祝活动正在进行中！
+      
+      &a感谢您的支持！
+      
+      ────────────────────
+      
+      &6&lServer Major Update
+      
+      &aDear players,
+      
+      &7Our server has been successfully upgraded to &bMinecraft 1.21.8&7!
+      
+      &e🎉 New features include:
+      &7• New biomes
+      &7• More block types  
+      &7• Optimized performance
+      
+      &c⚠ Important notice:
+      &7Please use the latest client version to connect.
+      
+      &d💎 Special event:
+      &7Upgrade celebration event is ongoing!
+      
+      &aThank you for your support!
+    date: "2025-08-11 10:00"
+    hover: "&7点击访问更新详情页面\n&7Click to visit update details"
+    url: "https://example.com/update-details"
+
+  - title: "新规则公告 | New Rules Announcement"
+    content: |
+      &c&l📋 服务器规则更新
+      
+      &7为了维护良好的游戏环境，我们更新了服务器规则：
+      
+      &a1. &7禁止使用外挂程序
+      &a2. &7禁止恶意破坏他人建筑
+      &a3. &7禁止发布不当言论
+      &a4. &7禁止恶意刷屏
+      &a5. &7禁止利用游戏漏洞
+      
+      &e违规处理：
+      &7• 轻微违规：警告处理
+      &7• 严重违规：临时封禁
+      &7• 重复违规：永久封禁
+      
+      &b如有疑问请联系管理员！
+      
+      ────────────────────
+      
+      &c&lServer Rules Update
+      
+      &7To maintain a good gaming environment, we have updated server rules:
+      
+      &a1. &7No cheating/hacking
+      &a2. &7No griefing others' builds
+      &a3. &7No inappropriate speech
+      &a4. &7No spamming
+      &a5. &7No exploiting bugs
+      
+      &eViolation handling:
+      &7• Minor violations: Warning
+      &7• Serious violations: Temporary ban
+      &7• Repeated violations: Permanent ban
+      
+      &bContact admin if you have questions!
+    date: "2025-08-10 15:30"
+    hover: "&7点击查看完整规则\n&7Click to view full rules"
+    command: "/rules"
+
+  - title: "活动公告 | Event Announcement"
+    content: |
+      &d&l🎊 建筑大赛开始啦！
+      
+      &6主题：&e未来城市
+      &6时间：&e8月11日 - 8月25日
+      &6奖励：&e钻石 x64 + 特殊称号
+      
+      &a参与方式：
+      &7• 在指定区域建造
+      &7• 使用 &b/event join &7报名
+      &7• 提交作品截图
+      
+      &c评选标准：
+      &7• 创意性 (40%)
+      &7• 美观度 (30%) 
+      &7• 完成度 (30%)
+      
+      &e快来展示你的创造力吧！
+      
+      ────────────────────
+      
+      &d&l🎊 Building Contest Starts!
+      
+      &6Theme: &eFuture City
+      &6Time: &eAug 11 - Aug 25
+      &6Rewards: &eDiamond x64 + Special Title
+      
+      &aHow to participate:
+      &7• Build in designated area
+      &7• Use &b/event join &7to register
+      &7• Submit work screenshots
+      
+      &cJudging criteria:
+      &7• Creativity (40%)
+      &7• Aesthetics (30%)
+      &7• Completion (30%)
+      
+      &eShow your creativity!
+    date: "2025-08-09 20:00"
+    hover: "&7点击加入活动\n&7Click to join event"
+    command: "/event join"
+
+  - title: "维护公告 | Maintenance Notice"
+    content: |
+      &e&l🔧 服务器维护通知
+      
+      &7为了给大家提供更好的游戏体验，服务器将进行例行维护：
+      
+      &c维护时间：
+      &7• 开始：2025年8月12日 凌晨2:00
+      &7• 结束：2025年8月12日 凌晨4:00
+      &7• 预计时长：2小时
+      
+      &a维护内容：
+      &7• 服务器性能优化
+      &7• 修复已知bug
+      &7• 数据库清理
+      &7• 插件更新
+      
+      &d维护期间服务器将无法连接，请大家合理安排游戏时间。
+      
+      &b感谢大家的理解与支持！
+      
+      ────────────────────
+      
+      &e&l🔧 Server Maintenance Notice
+      
+      &7To provide better gaming experience, server will undergo routine maintenance:
+      
+      &cMaintenance time:
+      &7• Start: Aug 12, 2025 02:00 AM
+      &7• End: Aug 12, 2025 04:00 AM  
+      &7• Duration: 2 hours
+      
+      &aMaintenance content:
+      &7• Server performance optimization
+      &7• Bug fixes
+      &7• Database cleanup
+      &7• Plugin updates
+      
+      &dServer will be unavailable during maintenance. Please plan your game time accordingly.
+      
+      &bThank you for your understanding!
+    date: "2025-08-08 18:00"
+    hover: "&7点击设置维护提醒\n&7Click to set maintenance reminder"
+    command: "/remind maintenance"

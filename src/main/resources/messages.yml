@@ -1,0 +1,46 @@
+messages:
+  # 中文消息
+  zh:
+    news-notification: "&6[服务器新闻] &a您有新的服务器消息，&b&l点击这里查看！"
+    click-to-view: "&7点击打开服务器新闻书籍"
+    book-title: "&6&l服务器新闻"
+    book-author: "服务器管理员"
+    welcome-page: |
+      &6&l欢迎 {player}！
+      
+      &7当前时间: &e{time}
+      
+      &a欢迎来到服务器新闻中心！
+      
+      &b这里有最新的服务器动态和重要公告。
+      
+      &7请翻页查看详细内容...
+      
+      &d服务器在线: &e%server_online%
+      &d您的等级: &e%player_level%
+    no-news: "&7当前没有新闻内容。"
+    no-permission: "&c您没有权限使用此命令！"
+    config-reloaded: "&a配置文件已重新加载！"
+
+  # 英文消息
+  en:
+    news-notification: "&6[Server News] &aYou have new server messages, &b&lclick here to view!"
+    click-to-view: "&7Click to open the server news book"
+    book-title: "&6&lServer News"
+    book-author: "Server Administrator"
+    welcome-page: |
+      &6&lWelcome {player}!
+      
+      &7Current time: &e{time}
+      
+      &aWelcome to the Server News Center!
+      
+      &bHere are the latest server updates and important announcements.
+      
+      &7Please turn the page for detailed content...
+      
+      &dOnline players: &e%server_online%
+      &dYour level: &e%player_level%
+    no-news: "&7No news content available."
+    no-permission: "&cYou don't have permission to use this command!"
+    config-reloaded: "&aConfiguration reloaded!"
