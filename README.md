@@ -52,7 +52,7 @@ auto-notification:
   delay-ticks: 60
 ```
 
-`news.yml`存储所有新闻内容，格式为：
+### `news.yml`存储所有新闻内容，格式为：
 
 ```yaml
 news:
