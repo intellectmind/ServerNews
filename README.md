@@ -56,18 +56,18 @@ news:
     hover: "悬停提示文本" # 可选
 ```
 
-权限节点
-权限节点	描述	默认
-servernews.use	允许使用/news命令	true
-servernews.admin	允许使用新闻管理命令	op
-servernews.*	所有权限	op
+权限节点  
+权限节点	描述	默认  
+servernews.use	允许使用/news命令	true  
+servernews.admin	允许使用新闻管理命令	op  
+servernews.*	所有权限	op  
 
-常见问题
-Q: 如何添加带颜色的新闻？
-A: 使用 & 符号加上颜色代码，例如 &a绿色文字，或十六进制颜色 #FF0000红色文字。
+常见问题  
+Q: 如何添加带颜色的新闻？  
+A: 使用 & 符号加上颜色代码，例如 &a绿色文字，或十六进制颜色 #FF0000红色文字。  
 
-Q: 为什么新闻书籍打不开？
-A: 确保玩家有 servernews.use 权限，并检查控制台是否有错误日志。
+Q: 为什么新闻书籍打不开？  
+A: 确保玩家有 servernews.use 权限，并检查控制台是否有错误日志。  
 
-Q: 如何增加新闻数量限制？
-A: 修改 config.yml 中的 max-news 值。
+Q: 如何增加新闻数量限制？  
+A: 修改 config.yml 中的 max-news 值。  
