@@ -2,8 +2,6 @@
 # Maximum number of news items to keep
 max-news: 10
 
-# 自动通知设置
-# Auto-notification settings
 auto-notification:
   # 玩家加入后延迟时间 (tick)
   # 3 seconds delay after player joins

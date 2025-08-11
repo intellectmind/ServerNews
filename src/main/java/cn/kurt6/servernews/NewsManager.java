@@ -135,9 +135,10 @@ public class NewsManager {
     }
 
     /**
-     * 创建格式化的新闻组件
+     * 创建格式化的新闻组件（支持分页）
      */
-    public Component createFormattedNews(Player player, Map<String, Object> newsItem, String language) {
+    public List<Component> createFormattedNews(Player player, Map<String, Object> newsItem, String language) {
+        List<Component> pages = new ArrayList<>();
         String title = (String) newsItem.get("title");
         String content = (String) newsItem.get("content");
         String date = (String) newsItem.get("date");
@@ -145,21 +146,67 @@ public class NewsManager {
         String command = (String) newsItem.get("command");
         String hover = (String) newsItem.get("hover");
 
+        // 处理占位符
+        if (plugin.isPlaceholderAPIEnabled()) {
+            title = PlaceholderAPI.setPlaceholders(player, title);
+            content = PlaceholderAPI.setPlaceholders(player, content);
+            if (hover != null) {
+                hover = PlaceholderAPI.setPlaceholders(player, hover);
+            }
+        }
+
+        // 创建标题和日期组件（无点击事件）
+        Component titleComponent = parseColoredText("&6&l" + title + "\n&r&7" + date + "\n\n");
+
+        // 处理内容分页
+        String[] lines = content.split("\n");
+        StringBuilder currentPageContent = new StringBuilder();
+        int currentPage = 1;
+        int totalPages = 1; // 初始为1，后面会计算
+
+        // 先计算总页数
+        int lineCount = 0;
+        for (String line : lines) {
+            lineCount += line.length() / 20 + 1; // 估算行数，每行约20字符
+        }
+        totalPages = (int) Math.ceil(lineCount / 9.0); // 每页约9行
+
+        // 重新处理分页
+        int linesOnCurrentPage = 0;
+        for (String line : lines) {
+            if (linesOnCurrentPage >= 9 || (currentPageContent.length() + line.length() > 156)) {
+                // 完成当前页
+                addPage(pages, titleComponent, currentPageContent.toString(),
+                        currentPage, totalPages, url, command, hover);
+                currentPage++;
+                currentPageContent = new StringBuilder();
+                linesOnCurrentPage = 0;
+            }
+            currentPageContent.append(line).append("\n");
+            linesOnCurrentPage++;
+        }
+
+        // 添加最后一页
+        if (currentPageContent.length() > 0) {
+            addPage(pages, titleComponent, currentPageContent.toString(),
+                    currentPage, totalPages, url, command, hover);
+        }
+
+        return pages;
+    }
+
+    /**
+     * 添加一个新闻页面
+     */
+    private void addPage(List<Component> pages, Component titleComponent, String content,
+                         int currentPage, int totalPages, String url, String command, String hover) {
         TextComponent.Builder builder = Component.text();
 
-        // 添加标题和日期（无点击事件）
-        Component titleComponent = parseColoredText("&6&l" + title + "\n&r&7" + date + "\n\n");
+        // 添加标题
         builder.append(titleComponent);
 
         // 添加内容
         Component contentComponent = parseColoredText(content);
-
-        // 处理占位符
-        if (plugin.isPlaceholderAPIEnabled()) {
-            String contentStr = LegacyComponentSerializer.legacySection().serialize(contentComponent);
-            contentStr = PlaceholderAPI.setPlaceholders(player, contentStr);
-            contentComponent = parseColoredText(contentStr);
-        }
 
         // 创建可点击的内容组件
         Component interactiveContent = contentComponent;
@@ -173,16 +220,12 @@ public class NewsManager {
 
         if (hover != null && !hover.isEmpty()) {
             Component hoverComponent = parseColoredText(hover);
-            if (plugin.isPlaceholderAPIEnabled()) {
-                String hoverStr = LegacyComponentSerializer.legacySection().serialize(hoverComponent);
-                hoverStr = PlaceholderAPI.setPlaceholders(player, hoverStr);
-                hoverComponent = parseColoredText(hoverStr);
-            }
             interactiveContent = interactiveContent.hoverEvent(HoverEvent.showText(hoverComponent));
         }
 
         builder.append(interactiveContent);
-        return builder.build();
+
+        pages.add(builder.build());
     }
 
     /**

@@ -1,5 +1,5 @@
 news:
-  - title: "服务器重大更新"
+  - title: "1.服务器重大更新"
     content: |
       &6&l📢 服务器重大更新公告
       
@@ -23,7 +23,7 @@ news:
     hover: "&7点击访问更新详情页面"
     url: "https://example.com/update-details"
 
-  - title: "New Rules Announcement"
+  - title: "2.New Rules Announcement"
     content: |
       &c&lServer Rules Update
       
@@ -45,7 +45,7 @@ news:
     hover: "&7Click to view full rules"
     command: "/rules"
 
-  - title: "活动公告 | Event Announcement"
+  - title: "3.活动公告 | Event Announcement"
     content: |
       &d&l🎊 建筑大赛开始啦！
       

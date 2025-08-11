@@ -1,6 +1,7 @@
 package cn.kurt6.servernews;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Bukkit;
@@ -17,6 +18,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.command.TabCompleter;
 import me.clip.placeholderapi.PlaceholderAPI;
 
 import java.io.File;
@@ -24,7 +26,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public class ServerNews extends JavaPlugin implements Listener, CommandExecutor {
+public class ServerNews extends JavaPlugin implements Listener, CommandExecutor, TabCompleter {
 
     private FileConfiguration messagesConfig;
     private FileConfiguration newsConfig;
@@ -57,6 +59,7 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor 
         // 注册命令
         Objects.requireNonNull(getCommand("news")).setExecutor(this);
         Objects.requireNonNull(getCommand("newsadmin")).setExecutor(this);
+        Objects.requireNonNull(getCommand("newsadmin")).setTabCompleter(this);
 
         // 定期清理阅读历史 - Folia兼容方式
         try {
@@ -136,6 +139,34 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor 
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (command.getName().equalsIgnoreCase("newsadmin")) {
+            if (args.length == 1) {
+                // 主命令补全
+                List<String> completions = new ArrayList<>();
+                String partial = args[0].toLowerCase();
+
+                if ("reload".startsWith(partial)) completions.add("reload");
+                if ("add".startsWith(partial)) completions.add("add");
+                if ("remove".startsWith(partial)) completions.add("remove");
+                if ("list".startsWith(partial)) completions.add("list");
+                if ("stats".startsWith(partial)) completions.add("stats");
+
+                return completions;
+            } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
+                // remove命令的索引补全
+                List<Map<String, Object>> newsList = newsManager.getNewsList();
+                List<String> indices = new ArrayList<>();
+                for (int i = 0; i < newsList.size(); i++) {
+                    indices.add(String.valueOf(i));
+                }
+                return indices;
+            }
+        }
+        return null; // 返回null让Bukkit处理默认补全
     }
 
     private void sendNewsNotification(Player player, String lang) {
@@ -308,8 +339,12 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor 
             pages.add(parseColoredText(noNewsMsg));
         } else {
             for (Map<String, Object> newsItem : newsList) {
-                Component newsPage = newsManager.createFormattedNews(player, newsItem, lang);
-                pages.add(newsPage);
+                List<Component> newsPages = newsManager.createFormattedNews(player, newsItem, lang);
+                for (Component page : newsPages) {
+                    TextComponent.Builder builder = Component.text();
+                    builder.append(page);
+                    pages.add(builder.build());
+                }
             }
         }
 
