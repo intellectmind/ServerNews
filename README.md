@@ -1,85 +1,92 @@
-# ServerNews 插件文档
+# ServerNews Plugin
 
-## 插件介绍
-一个为 Minecraft 服务器设计的新闻公告系统插件，它允许管理员发布和管理服务器新闻，并以精美的书籍形式展示给玩家。插件支持多语言（根据客户端文字自动切换）、交互式内容和自动通知功能
+**Read this in other languages: [English](README.md)，[中文](README_zh.md)。**
 
-## 功能特性
-- 📖 以书籍形式展示新闻内容
-- 🔔 玩家登录时自动通知未读新闻
-- 🌍 插件默认支持中文和英文，可以在 `messages.yml` 中添加更多语言支持
-- 🔗 支持URL链接和命令交互
-- 📊 新闻统计功能
-- 📅 自动清理过期阅读记录
-- 🎨 支持颜色代码和十六进制颜色
-- 📱 兼容 PlaceholderAPI 占位符
+## Plugin Introduction
+A news announcement system plugin designed for Minecraft servers, which allows administrators to publish and manage server news, displaying it to players in beautifully formatted book form. The plugin supports multiple languages (automatically switching based on client language settings), interactive content, and automatic notification features.  
+Compatible with Folia, Paper, Bukkit, Purpur, Spigot, and other server cores.  
 
-> **注意**：如需使用 PlaceholderAPI 功能，请确保已安装 PlaceholderAPI 插件
+## Features
+- 📖 Displays news content in book form
+- 🔔 Automatically notifies players of unread news upon login
+- 🌍 Supports Chinese and English by default; additional languages can be added in `messages.yml`
+- 🔗 Supports URL links and command interactions
+- 📊 News statistics tracking
+- 📅 Automatically clears expired read records
+- 🎨 Supports color codes and HEX colors
+- 📱 Compatible with PlaceholderAPI placeholders
 
-## 使用方法
+> **Note**：PlaceholderAPI must be installed to use PlaceholderAPI functionality
 
-### 玩家命令
-| 命令 | 描述 | 权限 |
+## Usage
+
+### Player Commands
+| Command | Description | Permission |
 |------|------|------|
-| `/news` | 打开新闻书籍 | `servernews.use` |
+| `/news` | Opens the news book | `servernews.use` |
 
-### 管理员命令
-| 命令 | 描述 | 示例 | 权限 |
+### Admin Commands
+| Command | Description | Example | Permission |
 |------|------|------|------|
-| `/newsadmin reload` | 重载配置文件 | `/newsadmin reload` | `servernews.admin` |
-| `/newsadmin add <标题> <内容>` | 添加新闻 | `/newsadmin add "更新公告" "服务器已更新至1.20"` | `servernews.admin` |
-| `/newsadmin remove <序号>` | 删除新闻 | `/newsadmin remove 0` | `servernews.admin` |
-| `/newsadmin list` | 列出所有新闻 | `/newsadmin list` | `servernews.admin` |
-| `/newsadmin stats` | 显示新闻统计 | `/newsadmin stats` | `servernews.admin` |
+| `/newsadmin reload` | 	Reload configuration files	 | `/newsadmin reload` | `servernews.admin` |
+| `/newsadmin add <title> <content>` | Add news | `/newsadmin add "Update Notice" "Server updated to 1.20"` | `servernews.admin` |
+| `/newsadmin remove <id>` | Remove news | `/newsadmin remove 0` | `servernews.admin` |
+| `/newsadmin list` | 	List all news | `/newsadmin list` | `servernews.admin` |
+| `/newsadmin stats` | 	Show news statistics | `/newsadmin stats` | `servernews.admin` |
 
-> **建议**：直接在`news.yml`编辑新闻，完成后reload即可
+> **Tip**：You can directly edit `news.yml` and reload afterward
 
-### 权限列表
+### Permission List
 
-| 权限节点            | 描述                     | 默认值 |
+| Permission Node            | 	Description                     | Default |
 |---------------------|--------------------------|--------|
-| `servernews.use`    | 允许使用`/news`命令      | true   |
-| `servernews.admin`  | 允许使用新闻管理命令     | op     |
-| `servernews.*`      | 包含所有新闻相关权限    | op     |
+| `servernews.use`    | Allows using `/news` command      | true   |
+| `servernews.admin`  | Grants access to admin commands     | op     |
+| `servernews.*`      | Grants all news-related permissions    | op     |
 
-## 配置文件
+## Configuration Files
 
 ### config.yml
 ```yaml
-# 最大保存的新闻数量
+# Maximum number of stored news  
 max-news: 10
 
-# 自动通知设置
 auto-notification:
-  # 玩家加入后延迟时间 (tick)
+  # Delay after player joins (in ticks) 
   delay-ticks: 60
 ```
 
-### `news.yml`存储所有新闻内容，格式为：
+### `news.yml` stores all news entries in the following format:
 
 ```yaml
 news:
-  - title: "新闻标题"
-    content: "新闻内容（支持颜色代码）"
+  - title: "News Title"
+    content: "News content (supports color codes)"
     date: "YYYY-MM-DD HH:mm"
-    url: "https://example.com" # 可选
-    command: "/command" # 可选
-    hover: "悬停提示文本" # 可选
+    url: "https://example.com" # Optional  
+    command: "/command" # Optional  
+    hover: "Hover text" # Optional  
 ```
 
-## 常见问题解答
+## Frequently Asked Questions
 
-### Q: 如何添加带颜色的新闻？
+### Q: How to add colored news?  
 **A:**  
-使用 `&` 符号加上颜色代码，例如：
-- `&a` 绿色文字
-- `&#FF0000` 红色文字（十六进制颜色代码）
+Use `&` followed by color codes, for example:  
+- `&a` for green text    
+- `&#FF0000` for red text (HEX color code)  
 
-### Q: 为什么新闻书籍打不开？
+### Q: Why can't the news book be opened?  
 **A:**  
-请检查：
-1. 玩家是否拥有 `servernews.use` 权限
-2. 服务器控制台是否有相关错误日志
+请检查：  
+1. If the player has the `servernews.use` permission  
+2. For any error logs in the server console    
 
-### Q: 如何增加新闻数量限制？
+### Q: How to increase the news limit?  
 **A:**  
-修改配置文件 `config.yml` 中的 `max-news` 参数值
+Modify the `max-news` value in `config.yml`  
+
+---
+
+### bStats
+![bStats](https://bstats.org/signatures/bukkit/ServerNews.svg)
