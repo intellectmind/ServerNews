@@ -342,10 +342,34 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor 
     }
 
     private String getPlayerLanguage(Player player) {
-        String locale = player.locale().toString();
-        if (locale.startsWith("zh")) {
-            return "zh";
+        // 获取玩家完整的locale (如zh_CN, en_US, ja_JP等)
+        String locale = player.locale().toString().toLowerCase();
+
+        // 支持的语言映射表
+        Map<String, String> languageMap = new HashMap<>();
+        languageMap.put("zh_cn", "zh");  // 简体中文
+        languageMap.put("zh_tw", "zh_tw"); // 繁体中文
+        languageMap.put("zh_hk", "zh_tw"); // 香港繁体
+        languageMap.put("ja", "ja");    // 日语
+        languageMap.put("ko", "ko");    // 韩语
+        languageMap.put("es", "es");    // 西班牙语
+        languageMap.put("fr", "fr");    // 法语
+        languageMap.put("de", "de");    // 德语
+        languageMap.put("ru", "ru");    // 俄语
+        // 可以继续添加更多语言支持
+
+        // 检查完整locale匹配
+        if (languageMap.containsKey(locale)) {
+            return languageMap.get(locale);
         }
+
+        // 检查主要语言部分 (如zh_CN -> zh)
+        String primaryLanguage = locale.split("_")[0];
+        if (languageMap.containsKey(primaryLanguage)) {
+            return languageMap.get(primaryLanguage);
+        }
+
+        // 默认英语
         return "en";
     }
 

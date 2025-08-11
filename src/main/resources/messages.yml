@@ -1,5 +1,6 @@
+# 消息配置，根据客户端端语言自动选择，可以添加更多语言
+# messages configuration, automatically selected according to the client language, you can add more languages
 messages:
-  # 中文消息
   zh:
     news-notification: "&6[服务器新闻] &a您有新的服务器消息，&b&l点击这里查看！"
     click-to-view: "&7点击打开服务器新闻书籍"
@@ -22,7 +23,6 @@ messages:
     no-permission: "&c您没有权限使用此命令！"
     config-reloaded: "&a配置文件已重新加载！"
 
-  # 英文消息
   en:
     news-notification: "&6[Server News] &aYou have new server messages, &b&lclick here to view!"
     click-to-view: "&7Click to open the server news book"

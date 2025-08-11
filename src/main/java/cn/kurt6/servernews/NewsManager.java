@@ -147,7 +147,7 @@ public class NewsManager {
 
         TextComponent.Builder builder = Component.text();
 
-        // 添加标题
+        // 添加标题和日期（无点击事件）
         Component titleComponent = parseColoredText("&6&l" + title + "\n&r&7" + date + "\n\n");
         builder.append(titleComponent);
 
@@ -161,11 +161,14 @@ public class NewsManager {
             contentComponent = parseColoredText(contentStr);
         }
 
+        // 创建可点击的内容组件
+        Component interactiveContent = contentComponent;
+
         // 添加交互功能
         if (url != null && !url.isEmpty()) {
-            contentComponent = contentComponent.clickEvent(ClickEvent.openUrl(url));
+            interactiveContent = interactiveContent.clickEvent(ClickEvent.openUrl(url));
         } else if (command != null && !command.isEmpty()) {
-            contentComponent = contentComponent.clickEvent(ClickEvent.runCommand(command));
+            interactiveContent = interactiveContent.clickEvent(ClickEvent.runCommand(command));
         }
 
         if (hover != null && !hover.isEmpty()) {
@@ -175,10 +178,10 @@ public class NewsManager {
                 hoverStr = PlaceholderAPI.setPlaceholders(player, hoverStr);
                 hoverComponent = parseColoredText(hoverStr);
             }
-            contentComponent = contentComponent.hoverEvent(HoverEvent.showText(hoverComponent));
+            interactiveContent = interactiveContent.hoverEvent(HoverEvent.showText(hoverComponent));
         }
 
-        builder.append(contentComponent);
+        builder.append(interactiveContent);
         return builder.build();
     }
 
