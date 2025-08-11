@@ -79,7 +79,7 @@ Use `&` followed by color codes, for example:
 
 ### Q: Why can't the news book be opened?  
 **A:**  
-请检查：  
+Check：  
 1. If the player has the `servernews.use` permission  
 2. For any error logs in the server console    
 
