@@ -61,6 +61,8 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
         Objects.requireNonNull(getCommand("newsadmin")).setExecutor(this);
         Objects.requireNonNull(getCommand("newsadmin")).setTabCompleter(this);
 
+        newsManager.loadReadHistory();
+
         // 定期清理阅读历史 - Folia兼容方式
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
@@ -86,6 +88,7 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
 
     @Override
     public void onDisable() {
+        newsManager.saveReadHistory();
         getLogger().info("ServerNews Plugin has been disabled!");
     }
 

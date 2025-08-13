@@ -5,10 +5,14 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.configuration.file.YamlConfiguration;
 import me.clip.placeholderapi.PlaceholderAPI;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -53,11 +57,30 @@ public class NewsManager {
         }
     }
 
+    private long lastSaveTime = 0;
+    private static final long SAVE_INTERVAL = 10 * 60 * 1000; // 10分钟保存一次
+
     /**
      * 标记玩家已阅读新闻
      */
     public void markAsRead(Player player) {
         lastViewTime.put(player.getUniqueId(), System.currentTimeMillis());
+
+        // 每隔 10 分钟自动保存一次
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastSaveTime > SAVE_INTERVAL) {
+            saveReadHistoryAsync();
+            lastSaveTime = currentTime;
+        }
+    }
+
+    /**
+     * 异步保存阅读历史
+     */
+    public void saveReadHistoryAsync() {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            saveReadHistory();
+        });
     }
 
     /**
@@ -317,5 +340,59 @@ public class NewsManager {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 保存阅读历史到文件
+     */
+    public void saveReadHistory() {
+        File readHistoryFile = new File(plugin.getDataFolder(), "read_history.yml");
+        YamlConfiguration config = new YamlConfiguration();
+
+        // 将UUID-long对转换为UUID-string对以便存储
+        Map<String, String> saveMap = new HashMap<>();
+        for (Map.Entry<UUID, Long> entry : lastViewTime.entrySet()) {
+            saveMap.put(entry.getKey().toString(), entry.getValue().toString());
+        }
+
+        config.set("read_history", saveMap);
+
+        try {
+            config.save(readHistoryFile);
+        } catch (IOException e) {
+            plugin.getLogger().warning("Unable to save reading history: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 从文件加载阅读历史
+     */
+    /**
+     * 从文件加载阅读历史
+     */
+    @SuppressWarnings("unchecked")
+    public void loadReadHistory() {
+        File readHistoryFile = new File(plugin.getDataFolder(), "read_history.yml");
+        if (!readHistoryFile.exists()) {
+            return;
+        }
+
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(readHistoryFile);
+        Map<String, Object> rawMap = config.getConfigurationSection("read_history") != null
+                ? config.getConfigurationSection("read_history").getValues(false)
+                : new HashMap<>();
+
+        for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
+            try {
+                UUID uuid = UUID.fromString(entry.getKey());
+                // 处理可能为String或Long的值
+                long time = entry.getValue() instanceof String
+                        ? Long.parseLong((String) entry.getValue())
+                        : (Long) entry.getValue();
+                lastViewTime.put(uuid, time);
+            } catch (Exception e) {
+                plugin.getLogger().warning("Error loading reading history: " + e.getMessage());
+            }
+        }
     }
 }
