@@ -58,7 +58,7 @@ public class NewsManager {
     }
 
     private long lastSaveTime = 0;
-    private static final long SAVE_INTERVAL = 10 * 60 * 1000; // 10分钟保存一次
+    private static final long SAVE_INTERVAL = 30 * 60 * 1000; // 30分钟保存一次
 
     /**
      * 标记玩家已阅读新闻
@@ -66,21 +66,42 @@ public class NewsManager {
     public void markAsRead(Player player) {
         lastViewTime.put(player.getUniqueId(), System.currentTimeMillis());
 
-        // 每隔 10 分钟自动保存一次
+        // 每隔 30 分钟自动保存一次
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastSaveTime > SAVE_INTERVAL) {
-            saveReadHistoryAsync();
-            lastSaveTime = currentTime;
+            // 尝试异步保存，如果失败则同步保存
+            try {
+                saveReadHistoryAsync();
+                lastSaveTime = currentTime;
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to save read history asynchronously, saving synchronously: " + e.getMessage());
+                saveReadHistory();
+                lastSaveTime = currentTime;
+            }
         }
     }
 
     /**
-     * 异步保存阅读历史
+     * 异步保存阅读历史 - Folia 兼容
      */
     public void saveReadHistoryAsync() {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        try {
+            // 检查是否为 Folia 环境
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            // Folia 环境下使用全局调度器的异步方法
+            Bukkit.getAsyncScheduler().runNow(plugin, task -> {
+                saveReadHistory();
+            });
+        } catch (ClassNotFoundException e) {
+            // 传统 Bukkit 环境
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                saveReadHistory();
+            });
+        } catch (Exception e) {
+            // 如果异步调用失败，直接同步保存
+            plugin.getLogger().warning("Failed to schedule async save, saving synchronously: " + e.getMessage());
             saveReadHistory();
-        });
+        }
     }
 
     /**
@@ -104,14 +125,15 @@ public class NewsManager {
             newsItem.put("content", content);
             newsItem.put("date", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
 
-            if (url != null && !url.isEmpty()) {
-                newsItem.put("url", url);
+            // 只在非空且非null时添加可选字段
+            if (url != null && !url.trim().isEmpty()) {
+                newsItem.put("url", url.trim());
             }
-            if (command != null && !command.isEmpty()) {
-                newsItem.put("command", command);
+            if (command != null && !command.trim().isEmpty()) {
+                newsItem.put("command", command.trim());
             }
-            if (hover != null && !hover.isEmpty()) {
-                newsItem.put("hover", hover);
+            if (hover != null && !hover.trim().isEmpty()) {
+                newsItem.put("hover", hover.trim());
             }
 
             newsList.add(0, newsItem); // 添加到开头
@@ -129,6 +151,7 @@ public class NewsManager {
             return true;
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to add news: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -185,19 +208,20 @@ public class NewsManager {
         String[] lines = content.split("\n");
         StringBuilder currentPageContent = new StringBuilder();
         int currentPage = 1;
-        int totalPages = 1; // 初始为1，后面会计算
 
-        // 先计算总页数
-        int lineCount = 0;
+        // 计算总页数
+        int estimatedLines = 0;
         for (String line : lines) {
-            lineCount += line.length() / 20 + 1; // 估算行数，每行约20字符
+            estimatedLines += Math.max(1, (line.length() / 20) + 1); // 估算行数，每行约20字符
         }
-        totalPages = (int) Math.ceil(lineCount / 9.0); // 每页约9行
+        int totalPages = Math.max(1, (int) Math.ceil(estimatedLines / 9.0)); // 每页约9行
 
         // 重新处理分页
         int linesOnCurrentPage = 0;
         for (String line : lines) {
-            if (linesOnCurrentPage >= 9 || (currentPageContent.length() + line.length() > 156)) {
+            // 检查是否需要换页
+            int lineLength = Math.max(1, (line.length() / 20) + 1);
+            if (linesOnCurrentPage + lineLength > 9 && currentPageContent.length() > 0) {
                 // 完成当前页
                 addPage(pages, titleComponent, currentPageContent.toString(),
                         currentPage, totalPages, url, command, hover);
@@ -206,11 +230,13 @@ public class NewsManager {
                 linesOnCurrentPage = 0;
             }
             currentPageContent.append(line).append("\n");
-            linesOnCurrentPage++;
+            linesOnCurrentPage += lineLength;
         }
 
         // 添加最后一页
         if (currentPageContent.length() > 0) {
+            // 重新计算总页数（防止估算错误）
+            totalPages = Math.max(currentPage, totalPages);
             addPage(pages, titleComponent, currentPageContent.toString(),
                     currentPage, totalPages, url, command, hover);
         }
@@ -247,6 +273,12 @@ public class NewsManager {
         }
 
         builder.append(interactiveContent);
+
+        // 如果有多页，添加页码信息
+        if (totalPages > 1) {
+            Component pageInfo = parseColoredText("\n\n&7[第 " + currentPage + "/" + totalPages + " 页]");
+            builder.append(pageInfo);
+        }
 
         pages.add(builder.build());
     }
@@ -300,7 +332,7 @@ public class NewsManager {
             stats.put("latestDate", latest.get("date"));
         }
 
-        // 统计有链接和命令的新闻数量
+        // 统计有链接、命令和悬停的新闻数量
         long withUrl = newsList.stream().mapToLong(news ->
                 news.containsKey("url") && !((String)news.get("url")).isEmpty() ? 1 : 0
         ).sum();
@@ -309,8 +341,13 @@ public class NewsManager {
                 news.containsKey("command") && !((String)news.get("command")).isEmpty() ? 1 : 0
         ).sum();
 
+        long withHover = newsList.stream().mapToLong(news ->
+                news.containsKey("hover") && !((String)news.get("hover")).isEmpty() ? 1 : 0
+        ).sum();
+
         stats.put("withUrl", withUrl);
         stats.put("withCommand", withCommand);
+        stats.put("withHover", withHover);
 
         return stats;
     }
@@ -319,8 +356,27 @@ public class NewsManager {
      * 清理过期的阅读记录
      */
     public void cleanupReadHistory() {
-        long cutoffTime = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L); // 7天前
-        lastViewTime.entrySet().removeIf(entry -> entry.getValue() < cutoffTime);
+        try {
+            long cutoffTime = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L); // 7天前
+            int removedCount = 0;
+
+            Iterator<Map.Entry<UUID, Long>> iterator = lastViewTime.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<UUID, Long> entry = iterator.next();
+                if (entry.getValue() < cutoffTime) {
+                    iterator.remove();
+                    removedCount++;
+                }
+            }
+
+            if (removedCount > 0) {
+                plugin.getLogger().info("Cleaned up " + removedCount + " expired read history entries");
+                // 清理后保存一次
+                saveReadHistory(); // 同步保存，因为我们已经在异步任务中了
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error during read history cleanup: " + e.getMessage());
+        }
     }
 
     /**
@@ -359,6 +415,7 @@ public class NewsManager {
 
         try {
             config.save(readHistoryFile);
+            plugin.getLogger().info("Saved reading history for " + saveMap.size() + " players");
         } catch (IOException e) {
             plugin.getLogger().warning("Unable to save reading history: " + e.getMessage());
         }
@@ -367,32 +424,38 @@ public class NewsManager {
     /**
      * 从文件加载阅读历史
      */
-    /**
-     * 从文件加载阅读历史
-     */
     @SuppressWarnings("unchecked")
     public void loadReadHistory() {
         File readHistoryFile = new File(plugin.getDataFolder(), "read_history.yml");
         if (!readHistoryFile.exists()) {
+            plugin.getLogger().info("No reading history file found, starting fresh");
             return;
         }
 
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(readHistoryFile);
-        Map<String, Object> rawMap = config.getConfigurationSection("read_history") != null
-                ? config.getConfigurationSection("read_history").getValues(false)
-                : new HashMap<>();
+        try {
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(readHistoryFile);
+            Map<String, Object> rawMap = config.getConfigurationSection("read_history") != null
+                    ? config.getConfigurationSection("read_history").getValues(false)
+                    : new HashMap<>();
 
-        for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
-            try {
-                UUID uuid = UUID.fromString(entry.getKey());
-                // 处理可能为String或Long的值
-                long time = entry.getValue() instanceof String
-                        ? Long.parseLong((String) entry.getValue())
-                        : (Long) entry.getValue();
-                lastViewTime.put(uuid, time);
-            } catch (Exception e) {
-                plugin.getLogger().warning("Error loading reading history: " + e.getMessage());
+            int loadedCount = 0;
+            for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
+                try {
+                    UUID uuid = UUID.fromString(entry.getKey());
+                    // 处理可能为String或Long的值
+                    long time = entry.getValue() instanceof String
+                            ? Long.parseLong((String) entry.getValue())
+                            : (Long) entry.getValue();
+                    lastViewTime.put(uuid, time);
+                    loadedCount++;
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Error loading reading history for entry: " + entry.getKey() + " - " + e.getMessage());
+                }
             }
+
+            plugin.getLogger().info("Loaded reading history for " + loadedCount + " players");
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to load reading history: " + e.getMessage());
         }
     }
 }

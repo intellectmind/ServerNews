@@ -69,7 +69,13 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
             // Folia服务器
             getLogger().info("Detected Folia server, using Folia scheduler");
             Bukkit.getGlobalRegionScheduler().runAtFixedRate(this,
-                    task -> newsManager.cleanupReadHistory(),
+                    task -> {
+                        try {
+                            newsManager.cleanupReadHistory();
+                        } catch (Exception e) {
+                            getLogger().warning("Error during read history cleanup: " + e.getMessage());
+                        }
+                    },
                     20L * 60 * 60, // 初始延迟1小时
                     20L * 60 * 60 * 6 // 每6小时执行一次
             );
@@ -77,7 +83,13 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
             // 传统Bukkit服务器
             getLogger().info("Using traditional Bukkit scheduler");
             Bukkit.getScheduler().runTaskTimerAsynchronously(this,
-                    () -> newsManager.cleanupReadHistory(),
+                    () -> {
+                        try {
+                            newsManager.cleanupReadHistory();
+                        } catch (Exception ex) {
+                            getLogger().warning("Error during read history cleanup: " + ex.getMessage());
+                        }
+                    },
                     20L * 60 * 60, // 1小时后开始
                     20L * 60 * 60 * 6 // 每6小时执行一次
             );
@@ -114,6 +126,7 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        int delayTicks = getConfig().getInt("auto-notification.delay-ticks", 60);
 
         // 使用 Folia 兼容的方式调度任务
         if (isFolia()) {
@@ -123,7 +136,7 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
                     String playerLang = getPlayerLanguage(player);
                     sendNewsNotification(player, playerLang);
                 }
-            }, null, getConfig().getInt("auto-notification.delay-ticks", 60));
+            }, null, delayTicks);
         } else {
             // 传统 Bukkit 使用全局调度器
             Bukkit.getScheduler().runTaskLater(this, () -> {
@@ -131,7 +144,7 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
                     String playerLang = getPlayerLanguage(player);
                     sendNewsNotification(player, playerLang);
                 }
-            }, getConfig().getInt("auto-notification.delay-ticks", 60));
+            }, delayTicks);
         }
     }
 
@@ -157,6 +170,7 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
                 if ("remove".startsWith(partial)) completions.add("remove");
                 if ("list".startsWith(partial)) completions.add("list");
                 if ("stats".startsWith(partial)) completions.add("stats");
+                if ("help".startsWith(partial)) completions.add("help");
 
                 return completions;
             } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
@@ -167,9 +181,19 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
                     indices.add(String.valueOf(i));
                 }
                 return indices;
+            } else if (args[0].equalsIgnoreCase("add") && args.length > 3) {
+                // add命令的选项补全
+                List<String> completions = new ArrayList<>();
+                String partial = args[args.length - 1].toLowerCase();
+
+                if ("-url".startsWith(partial)) completions.add("-url");
+                if ("-cmd".startsWith(partial)) completions.add("-cmd");
+                if ("-hover".startsWith(partial)) completions.add("-hover");
+
+                return completions;
             }
         }
-        return null; // 返回null让Bukkit处理默认补全
+        return null;
     }
 
     private void sendNewsNotification(Player player, String lang) {
@@ -207,8 +231,7 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
         if (command.getName().equalsIgnoreCase("newsadmin")) {
             if (!sender.hasPermission("servernews.admin")) {
                 String lang = sender instanceof Player ? getPlayerLanguage((Player) sender) : "zh";
-                String message = messagesConfig.getString("messages." + lang + ".no-permission",
-                        messagesConfig.getString("messages.zh.no-permission"));
+                String message = getMessage(lang, "no-permission");
                 sender.sendMessage(parseColoredText(message));
                 return true;
             }
@@ -218,76 +241,32 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
                 return true;
             }
 
+            String lang = sender instanceof Player ? getPlayerLanguage((Player) sender) : "zh";
+
             switch (args[0].toLowerCase()) {
                 case "reload":
                     reloadConfigs();
-                    String lang = sender instanceof Player ? getPlayerLanguage((Player) sender) : "zh";
-                    String message = messagesConfig.getString("messages." + lang + ".config-reloaded",
-                            messagesConfig.getString("messages.zh.config-reloaded"));
+                    String message = getMessage(lang, "config-reloaded");
                     sender.sendMessage(parseColoredText(message));
                     break;
 
                 case "add":
-                    if (args.length < 3) {
-                        sender.sendMessage("§cUsage: /newsadmin add <title> <content>");
-                        return true;
-                    }
-                    String title = args[1];
-                    String content = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-
-                    if (newsManager.validateNews(title, content)) {
-                        if (newsManager.addNews(title, content, null, null, null)) {
-                            sender.sendMessage("§aNews added successfully!");
-                        } else {
-                            sender.sendMessage("§cFailed to add news!");
-                        }
-                    } else {
-                        sender.sendMessage("§cInvalid news format! Check title and content length.");
-                    }
+                    handleAddCommand(sender, args, lang);
                     break;
 
                 case "remove":
-                    if (args.length < 2) {
-                        sender.sendMessage("§cUsage: /newsadmin remove <index>");
-                        return true;
-                    }
-                    try {
-                        int index = Integer.parseInt(args[1]);
-                        if (newsManager.removeNews(index)) {
-                            sender.sendMessage("§aNews removed successfully!");
-                        } else {
-                            sender.sendMessage("§cInvalid news index!");
-                        }
-                    } catch (NumberFormatException e) {
-                        sender.sendMessage("§cInvalid number format!");
-                    }
+                    handleRemoveCommand(sender, args, lang);
                     break;
 
                 case "list":
-                    List<Map<String, Object>> newsList = newsManager.getNewsList();
-                    if (newsList.isEmpty()) {
-                        sender.sendMessage("§7No news available.");
-                    } else {
-                        sender.sendMessage("§6=== News List ===");
-                        for (int i = 0; i < newsList.size(); i++) {
-                            Map<String, Object> news = newsList.get(i);
-                            sender.sendMessage("§a" + i + "§7: §e" + news.get("title") + " §7(" + news.get("date") + ")");
-                        }
-                    }
+                    handleListCommand(sender, lang);
                     break;
 
                 case "stats":
-                    Map<String, Object> stats = newsManager.getNewsStats();
-                    sender.sendMessage("§6=== News Statistics ===");
-                    sender.sendMessage("§aTotal news: §e" + stats.get("total") + "§7/§e" + stats.get("maxAllowed"));
-                    if (stats.containsKey("latestTitle")) {
-                        sender.sendMessage("§aLatest: §e" + stats.get("latestTitle"));
-                        sender.sendMessage("§aDate: §e" + stats.get("latestDate"));
-                    }
-                    sender.sendMessage("§aWith URL: §e" + stats.get("withUrl"));
-                    sender.sendMessage("§aWith Command: §e" + stats.get("withCommand"));
+                    handleStatsCommand(sender, lang);
                     break;
 
+                case "help":
                 default:
                     sendAdminHelp(sender);
                     break;
@@ -296,6 +275,224 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
         }
 
         return false;
+    }
+
+    /**
+     * 处理添加新闻命令
+     */
+    private void handleAddCommand(CommandSender sender, String[] args, String lang) {
+        if (args.length < 3) {
+            sender.sendMessage(parseColoredText(getMessage(lang, "news-add-usage")));
+            return;
+        }
+
+        try {
+            // 解析参数
+            ParsedAddCommand parsed = parseAddCommand(args);
+
+            // 验证新闻内容
+            if (!newsManager.validateNews(parsed.title, parsed.content)) {
+                sender.sendMessage(parseColoredText(getMessage(lang, "news-add-invalid")));
+                return;
+            }
+
+            // 验证URL格式
+            if (parsed.url != null && !isValidUrl(parsed.url)) {
+                sender.sendMessage(parseColoredText(getMessage(lang, "news-add-invalid-url")));
+                return;
+            }
+
+            // 验证命令格式
+            if (parsed.command != null && !isValidCommand(parsed.command)) {
+                sender.sendMessage(parseColoredText(getMessage(lang, "news-add-invalid-command")));
+                return;
+            }
+
+            // 添加新闻
+            if (newsManager.addNews(parsed.title, parsed.content, parsed.url, parsed.command, parsed.hover)) {
+                sender.sendMessage(parseColoredText(getMessage(lang, "news-add-success")));
+            } else {
+                sender.sendMessage(parseColoredText(getMessage(lang, "news-add-failed")));
+            }
+        } catch (IllegalArgumentException e) {
+            sender.sendMessage(parseColoredText("§c" + e.getMessage()));
+        }
+    }
+
+    /**
+     * 解析添加命令的参数
+     */
+    private ParsedAddCommand parseAddCommand(String[] args) {
+        String title = args[1];
+        StringBuilder contentBuilder = new StringBuilder();
+        String url = null;
+        String command = null;
+        String hover = null;
+
+        // 查找选项的开始位置
+        int optionsStart = -1;
+        for (int i = 2; i < args.length; i++) {
+            if (args[i].startsWith("-")) {
+                optionsStart = i;
+                break;
+            } else {
+                if (contentBuilder.length() > 0) {
+                    contentBuilder.append(" ");
+                }
+                contentBuilder.append(args[i]);
+            }
+        }
+
+        String content = contentBuilder.toString();
+        if (content.isEmpty()) {
+            throw new IllegalArgumentException("Content cannot be empty!");
+        }
+
+        // 解析选项
+        if (optionsStart != -1) {
+            for (int i = optionsStart; i < args.length; i++) {
+                if (args[i].equals("-url") && i + 1 < args.length) {
+                    url = args[i + 1];
+                    i++; // 跳过下一个参数
+                } else if (args[i].equals("-cmd") && i + 1 < args.length) {
+                    command = args[i + 1];
+                    i++; // 跳过下一个参数
+                } else if (args[i].equals("-hover") && i + 1 < args.length) {
+                    // 悬停文本可能包含空格，收集直到下一个选项或结束
+                    StringBuilder hoverBuilder = new StringBuilder();
+                    i++; // 移动到悬停文本的第一个单词
+                    while (i < args.length && !args[i].startsWith("-")) {
+                        if (hoverBuilder.length() > 0) {
+                            hoverBuilder.append(" ");
+                        }
+                        hoverBuilder.append(args[i]);
+                        i++;
+                    }
+                    i--; // 回退一步，因为外层循环会自增
+                    hover = hoverBuilder.toString();
+                }
+            }
+        }
+
+        return new ParsedAddCommand(title, content, url, command, hover);
+    }
+
+    /**
+     * 验证URL格式
+     */
+    private boolean isValidUrl(String url) {
+        return url.startsWith("http://") || url.startsWith("https://");
+    }
+
+    /**
+     * 验证命令格式
+     */
+    private boolean isValidCommand(String command) {
+        return command.startsWith("/");
+    }
+
+    /**
+     * 处理删除新闻命令
+     */
+    private void handleRemoveCommand(CommandSender sender, String[] args, String lang) {
+        if (args.length < 2) {
+            sender.sendMessage(parseColoredText(getMessage(lang, "news-remove-usage")));
+            return;
+        }
+
+        try {
+            int index = Integer.parseInt(args[1]);
+            if (newsManager.removeNews(index)) {
+                sender.sendMessage(parseColoredText(getMessage(lang, "news-remove-success")));
+            } else {
+                sender.sendMessage(parseColoredText(getMessage(lang, "news-remove-invalid")));
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage(parseColoredText(getMessage(lang, "news-remove-number-error")));
+        }
+    }
+
+    /**
+     * 处理列表命令
+     */
+    private void handleListCommand(CommandSender sender, String lang) {
+        List<Map<String, Object>> newsList = newsManager.getNewsList();
+
+        sender.sendMessage(parseColoredText(getMessage(lang, "news-list-header")));
+
+        if (newsList.isEmpty()) {
+            sender.sendMessage(parseColoredText(getMessage(lang, "news-list-empty")));
+        } else {
+            for (int i = 0; i < newsList.size(); i++) {
+                Map<String, Object> news = newsList.get(i);
+                String title = (String) news.get("title");
+                String date = (String) news.get("date");
+
+                StringBuilder itemBuilder = new StringBuilder();
+                String itemTemplate = getMessage(lang, "news-list-item");
+                itemBuilder.append(itemTemplate
+                        .replace("{index}", String.valueOf(i))
+                        .replace("{title}", title)
+                        .replace("{date}", date));
+
+                // 添加功能标识
+                if (news.containsKey("url") && !((String)news.get("url")).isEmpty()) {
+                    itemBuilder.append(getMessage(lang, "news-list-has-url"));
+                }
+                if (news.containsKey("command") && !((String)news.get("command")).isEmpty()) {
+                    itemBuilder.append(getMessage(lang, "news-list-has-cmd"));
+                }
+                if (news.containsKey("hover") && !((String)news.get("hover")).isEmpty()) {
+                    itemBuilder.append(getMessage(lang, "news-list-has-hover"));
+                }
+
+                sender.sendMessage(parseColoredText(itemBuilder.toString()));
+            }
+        }
+    }
+
+    /**
+     * 处理统计命令
+     */
+    private void handleStatsCommand(CommandSender sender, String lang) {
+        Map<String, Object> stats = newsManager.getNewsStats();
+
+        sender.sendMessage(parseColoredText(getMessage(lang, "stats-header")));
+
+        String totalMsg = getMessage(lang, "stats-total")
+                .replace("{total}", String.valueOf(stats.get("total")))
+                .replace("{max}", String.valueOf(stats.get("maxAllowed")));
+        sender.sendMessage(parseColoredText(totalMsg));
+
+        if (stats.containsKey("latestTitle")) {
+            String latestMsg = getMessage(lang, "stats-latest")
+                    .replace("{title}", (String) stats.get("latestTitle"));
+            sender.sendMessage(parseColoredText(latestMsg));
+
+            String dateMsg = getMessage(lang, "stats-date")
+                    .replace("{date}", (String) stats.get("latestDate"));
+            sender.sendMessage(parseColoredText(dateMsg));
+        }
+
+        String urlMsg = getMessage(lang, "stats-with-url")
+                .replace("{count}", String.valueOf(stats.get("withUrl")));
+        sender.sendMessage(parseColoredText(urlMsg));
+
+        String cmdMsg = getMessage(lang, "stats-with-command")
+                .replace("{count}", String.valueOf(stats.get("withCommand")));
+        sender.sendMessage(parseColoredText(cmdMsg));
+
+        String hoverMsg = getMessage(lang, "stats-with-hover")
+                .replace("{count}", String.valueOf(stats.get("withHover")));
+        sender.sendMessage(parseColoredText(hoverMsg));
+    }
+
+    /**
+     * 获取本地化消息
+     */
+    private String getMessage(String lang, String key) {
+        return messagesConfig.getString("messages." + lang + "." + key,
+                messagesConfig.getString("messages.zh." + key, "§cMessage not found: " + key));
     }
 
     private void openNewsBook(Player player) {
@@ -418,12 +615,16 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
     }
 
     private void sendAdminHelp(CommandSender sender) {
-        sender.sendMessage("§6=== ServerNews Admin Commands ===");
-        sender.sendMessage("§a/newsadmin reload §7- Reload configurations");
-        sender.sendMessage("§a/newsadmin add <title> <content> §7- Add new news");
-        sender.sendMessage("§a/newsadmin remove <index> §7- Remove news by index");
-        sender.sendMessage("§a/newsadmin list §7- List all news with indices");
-        sender.sendMessage("§a/newsadmin stats §7- Show news statistics");
+        String lang = sender instanceof Player ? getPlayerLanguage((Player) sender) : "zh";
+
+        sender.sendMessage(parseColoredText(getMessage(lang, "admin-help-header")));
+        sender.sendMessage(parseColoredText(getMessage(lang, "admin-help-reload")));
+        sender.sendMessage(parseColoredText(getMessage(lang, "admin-help-add")));
+        sender.sendMessage(parseColoredText(getMessage(lang, "admin-help-remove")));
+        sender.sendMessage(parseColoredText(getMessage(lang, "admin-help-list")));
+        sender.sendMessage(parseColoredText(getMessage(lang, "admin-help-stats")));
+        sender.sendMessage(parseColoredText(getMessage(lang, "admin-help-addoptions")));
+        sender.sendMessage(parseColoredText(getMessage(lang, "admin-help-example")));
     }
 
     // Getter methods for NewsManager
@@ -441,5 +642,24 @@ public class ServerNews extends JavaPlugin implements Listener, CommandExecutor,
 
     public NewsManager getNewsManager() {
         return newsManager;
+    }
+
+    /**
+     * 解析添加命令的结果类
+     */
+    private static class ParsedAddCommand {
+        public final String title;
+        public final String content;
+        public final String url;
+        public final String command;
+        public final String hover;
+
+        public ParsedAddCommand(String title, String content, String url, String command, String hover) {
+            this.title = title;
+            this.content = content;
+            this.url = url;
+            this.command = command;
+            this.hover = hover;
+        }
     }
 }

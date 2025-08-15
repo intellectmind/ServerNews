@@ -23,6 +23,47 @@ messages:
     no-permission: "&c您没有权限使用此命令！"
     config-reloaded: "&a配置文件已重新加载！"
 
+    # 管理员命令相关
+    admin-help-header: "&6=== 服务器新闻管理命令 ==="
+    admin-help-reload: "&a/newsadmin reload &7- 重新加载配置文件"
+    admin-help-add: "&a/newsadmin add <标题> <内容> [选项] &7- 添加新闻"
+    admin-help-remove: "&a/newsadmin remove <索引> &7- 通过索引删除新闻"
+    admin-help-list: "&a/newsadmin list &7- 列出所有新闻和索引"
+    admin-help-stats: "&a/newsadmin stats &7- 显示新闻统计信息"
+    admin-help-addoptions: "&e  可用选项: &7-url <链接> -cmd <命令> -hover <悬停文本>"
+    admin-help-example: "&e  示例: &7/newsadmin add 欢迎 欢迎新玩家 -url https://example.com -hover 点击访问官网"
+
+    # 添加新闻相关
+    news-add-usage: "&c用法: /newsadmin add <标题> <内容> [选项]"
+    news-add-success: "&a新闻添加成功！"
+    news-add-failed: "&c添加新闻失败！"
+    news-add-invalid: "&c无效的新闻格式！请检查标题和内容长度。"
+    news-add-invalid-url: "&c无效的URL格式！URL必须以http://或https://开头。"
+    news-add-invalid-command: "&c无效的命令格式！命令必须以/开头。"
+
+    # 删除新闻相关
+    news-remove-usage: "&c用法: /newsadmin remove <索引>"
+    news-remove-success: "&a新闻删除成功！"
+    news-remove-invalid: "&c无效的新闻索引！"
+    news-remove-number-error: "&c无效的数字格式！"
+
+    # 列表显示
+    news-list-header: "&6=== 新闻列表 ==="
+    news-list-empty: "&7没有可用的新闻。"
+    news-list-item: "&a{index}&7: &e{title} &7({date})"
+    news-list-has-url: " &b[链接]"
+    news-list-has-cmd: " &d[命令]"
+    news-list-has-hover: " &a[悬停]"
+
+    # 统计信息
+    stats-header: "&6=== 新闻统计 ==="
+    stats-total: "&a总新闻数: &e{total}&7/&e{max}"
+    stats-latest: "&a最新新闻: &e{title}"
+    stats-date: "&a发布日期: &e{date}"
+    stats-with-url: "&a包含链接: &e{count}"
+    stats-with-command: "&a包含命令: &e{count}"
+    stats-with-hover: "&a包含悬停: &e{count}"
+
   en:
     news-notification: "&6[Server News] &aYou have new server messages, &b&lclick here to view!"
     click-to-view: "&7Click to open the server news book"
@@ -44,3 +85,44 @@ messages:
     no-news: "&7No news content available."
     no-permission: "&cYou don't have permission to use this command!"
     config-reloaded: "&aConfiguration reloaded!"
+
+    # Admin command related
+    admin-help-header: "&6=== ServerNews Admin Commands ==="
+    admin-help-reload: "&a/newsadmin reload &7- Reload configurations"
+    admin-help-add: "&a/newsadmin add <title> <content> [options] &7- Add new news"
+    admin-help-remove: "&a/newsadmin remove <index> &7- Remove news by index"
+    admin-help-list: "&a/newsadmin list &7- List all news with indices"
+    admin-help-stats: "&a/newsadmin stats &7- Show news statistics"
+    admin-help-addoptions: "&e  Available options: &7-url <link> -cmd <command> -hover <hover text>"
+    admin-help-example: "&e  Example: &7/newsadmin add Welcome Welcome new players -url https://example.com -hover Click to visit website"
+
+    # Add news related
+    news-add-usage: "&cUsage: /newsadmin add <title> <content> [options]"
+    news-add-success: "&aNews added successfully!"
+    news-add-failed: "&cFailed to add news!"
+    news-add-invalid: "&cInvalid news format! Check title and content length."
+    news-add-invalid-url: "&cInvalid URL format! URL must start with http:// or https://."
+    news-add-invalid-command: "&cInvalid command format! Command must start with /."
+
+    # Remove news related
+    news-remove-usage: "&cUsage: /newsadmin remove <index>"
+    news-remove-success: "&aNews removed successfully!"
+    news-remove-invalid: "&cInvalid news index!"
+    news-remove-number-error: "&cInvalid number format!"
+
+    # List display
+    news-list-header: "&6=== News List ==="
+    news-list-empty: "&7No news available."
+    news-list-item: "&a{index}&7: &e{title} &7({date})"
+    news-list-has-url: " &b[URL]"
+    news-list-has-cmd: " &d[CMD]"
+    news-list-has-hover: " &a[HOVER]"
+
+    # Statistics
+    stats-header: "&6=== News Statistics ==="
+    stats-total: "&aTotal news: &e{total}&7/&e{max}"
+    stats-latest: "&aLatest news: &e{title}"
+    stats-date: "&aPublish date: &e{date}"
+    stats-with-url: "&aWith URL: &e{count}"
+    stats-with-command: "&aWith Command: &e{count}"
+    stats-with-hover: "&aWith Hover: &e{count}"
