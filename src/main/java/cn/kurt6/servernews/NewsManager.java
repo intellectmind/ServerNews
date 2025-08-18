@@ -75,8 +75,12 @@ public class NewsManager {
                 lastSaveTime = currentTime;
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to save read history asynchronously, saving synchronously: " + e.getMessage());
-                saveReadHistory();
-                lastSaveTime = currentTime;
+                try {
+                    saveReadHistory();
+                    lastSaveTime = currentTime;
+                } catch (Exception syncError) {
+                    plugin.getLogger().severe("Failed to save read history both async and sync: " + syncError.getMessage());
+                }
             }
         }
     }
@@ -88,15 +92,31 @@ public class NewsManager {
         try {
             // 检查是否为 Folia 环境
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+
             // Folia 环境下使用全局调度器的异步方法
             Bukkit.getAsyncScheduler().runNow(plugin, task -> {
                 saveReadHistory();
             });
+
         } catch (ClassNotFoundException e) {
             // 传统 Bukkit 环境
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                saveReadHistory();
-            });
+            try {
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    saveReadHistory();
+                });
+            } catch (UnsupportedOperationException foliaError) {
+                // 如果在 Folia 环境中但 ClassNotFoundException 检测失败了
+                plugin.getLogger().warning("Detected Folia environment through exception, retrying with Folia scheduler");
+                try {
+                    Bukkit.getAsyncScheduler().runNow(plugin, task -> {
+                        saveReadHistory();
+                    });
+                } catch (Exception retryError) {
+                    // 最后的后备方案：同步保存
+                    plugin.getLogger().warning("All async scheduling attempts failed, falling back to synchronous save: " + retryError.getMessage());
+                    saveReadHistory();
+                }
+            }
         } catch (Exception e) {
             // 如果异步调用失败，直接同步保存
             plugin.getLogger().warning("Failed to schedule async save, saving synchronously: " + e.getMessage());
@@ -147,6 +167,23 @@ public class NewsManager {
             FileConfiguration newsConfig = plugin.getNewsConfig();
             newsConfig.set("news", newsList);
             newsConfig.save(plugin.getNewsFile());
+
+            // 清除所有玩家的阅读状态
+            lastViewTime.clear();
+            plugin.getLogger().info("Cleared all player read history due to new news addition");
+
+            // 异步保存清空后的阅读历史
+            try {
+                saveReadHistoryAsync();
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to save cleared read history: " + e.getMessage());
+                // 如果异步保存失败，尝试同步保存
+                try {
+                    saveReadHistory();
+                } catch (Exception syncError) {
+                    plugin.getLogger().severe("Failed to save read history both async and sync: " + syncError.getMessage());
+                }
+            }
 
             return true;
         } catch (Exception e) {
